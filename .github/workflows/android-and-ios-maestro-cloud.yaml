@@ -1,0 +1,55 @@
+name: Android & iOS E2E (Maestro Cloud)
+
+on: [push, pull_request]
+
+
+jobs:
+  run_android_e2e:
+    timeout-minutes: 45
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        api-level: [33, 31, 30, 29]
+        # ^^^ from: https://cloud.mobile.dev/reference/device-configuration#android
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+
+      - uses: mobile-dev-inc/action-maestro-cloud@v1
+        with:
+          api-key: ${{ secrets.MAESTRO_CLOUD_API_KEY }}
+          app-file: ./app-release.apk
+          android-api-level: ${{ matrix.api-level }}
+          name: Android-${{ matrix.api-level }}-${{ github.run_number }}
+          env: |
+            APP_ID=com.retyui.myapp
+
+  run_ios_e2e:
+    timeout-minutes: 45
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        ios-version: [16, 15]
+        # ^^^ from: https://cloud.mobile.dev/reference/device-configuration#android
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+
+      - uses: mobile-dev-inc/action-maestro-cloud@v1
+        with:
+          api-key: ${{ secrets.MAESTRO_CLOUD_API_KEY }}
+          app-file: ./MyApp.app
+          ios-version: ${{ matrix.ios-version }}
+          name: iOS-${{ matrix.ios-version }}-${{ github.run_number }}
+          env: |
+            APP_ID=com.retyui.myapp
