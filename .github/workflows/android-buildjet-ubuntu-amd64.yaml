@@ -1,30 +1,53 @@
-name: Android E2E (Github Actions Ubuntu)
+name: Android E2E (Github Actions BuildJet AMD64)
 
 on: [push, pull_request]
 
-
 jobs:
   run_android_e2e:
-    timeout-minutes: 60
-    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    runs-on: buildjet-2vcpu-ubuntu-2204 # See: https://buildjet.com/for-github-actions/docs/getting-started/run-your-first-workflow
 
     strategy:
       fail-fast: false
-      max-parallel: 5
+      max-parallel: 10
       matrix:
         arch: [x86, x86_64]
-        # ^^^ `runs-on: ubuntu-*` doesn't support `arm64-v8a`
+        # ^^^ `runs-on: buildjet-2vcpu-ubuntu-2204` doesn't support `arm64-v8a`
 
-        api-level: [21, 22, 23, 24, 25, 26, 27, 28, 29]
-        # api-level:
-        #  1. `30+` required KVM to be enabled (see: https://github.com/ReactiveCircus/android-emulator-runner/issues/46)
-        #  2. `21`  is the minimum API level supported by React Native
+
+        api-level: [26, 27, 28, 29, 30, 31, 32, 33, 34]
+        # ^^^ `21`  is the minimum API level supported by React Native
+        # [21, 22, 23, 24, 25,] - didn't work with Maestro
 
         target: [default, google_apis, google_apis_playstore]
 
         exclude:
           # Exclude combinations that are not supported by the Android SDK
           # Print all available Android emulators: `sdkmanager --list --verbose | grep system-images`
+
+          # x85
+          - arch: x86
+            api-level: 31
+          - arch: x86
+            api-level: 32
+          - arch: x86
+            api-level: 33
+          - arch: x86
+            api-level: 34
+
+          # default
+          - target: default
+            api-level: 30
+            arch: x86
+          - target: default
+            api-level: 31
+            arch: x86
+          - target: default
+            api-level: 32
+          - target: default
+            api-level: 33
+          - target: default
+            api-level: 34
 
           # google_apis
           - target: google_apis
@@ -50,8 +73,6 @@ jobs:
           - target: google_apis_playstore
             api-level: 27
             arch: x86_64
-
-
 
 
     steps:
