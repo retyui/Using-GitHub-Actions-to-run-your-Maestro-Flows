@@ -113,4 +113,22 @@ jobs:
             adb install app-release.apk
 
             # Run e2e
-            $HOME/.maestro/bin/maestro test .maestro/ --env=APP_ID=com.retyui.myapp --output=report.xml --format=junit
+            ./run_android_e2e.sh
+            # ^^^ Will debug files: report*.xml, video_record.mp4, last_img.png
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: e2e-report-${{ matrix.recipe_uuid }}
+          path: |
+            ${{ github.workspace }}/*.mp4
+            ${{ github.workspace }}/*.png
+            ${{ github.workspace }}/report*.xml
+
+      - name: Upload debug logs
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: e2e-debug-logs-${{ matrix.recipe_uuid }}
+          path: ~/.maestro/tests/**/*

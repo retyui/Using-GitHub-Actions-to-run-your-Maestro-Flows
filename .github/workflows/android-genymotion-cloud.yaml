@@ -1,0 +1,95 @@
+name: Android E2E (Genymotion Cloud)
+
+on: [push, pull_request]
+
+env:
+  GM_ANDROID_13 : 45017bce-d954-4b94-83d9-f9eac862f117
+  GM_ANDROID_12 : 49783077-9f15-4b94-99a4-c124a464fba3
+  GM_ANDROID_11 : 95016679-8f8d-4890-b026-e4ad889aadf1
+  GM_ANDROID_10 : 4c015ada-e64e-4f5d-a320-06cbf6e95648
+  GM_ANDROID_9  : 107d757e-463a-4a18-8667-b8dec6e4c87e
+  GM_ANDROID_8_1: 20ee73af-5c32-405c-8582-cd19ffd175c2
+  GM_ANDROID_8_0: 74ad0f8b-90f5-47c5-bc7a-9c05b04de4ca
+  GM_ANDROID_7_1: de849ff1-e051-4844-a92f-51b0181a6586
+  GM_ANDROID_7_0: b747b286-4729-46ef-9bfa-f05942b15588
+  GM_ANDROID_6  : 35d91457-dbfe-47ac-98fc-3271440753c4
+
+
+jobs:
+  run_android_e2e:
+    timeout-minutes: 45
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      max-parallel: 2 # Trial & Pay as you Go - with  2 max simultaneous devices (see: https://docs.genymotion.com/saas/03_1_Pricing/#pay-as-you-go)
+      matrix:
+        android_api: [13, 12, 11, 10, 9, 8_1, 8_0]
+
+    env:
+      GMSAAS_INSTANCE_NAME: android-e2e-${{ github.run_number }}-${{ matrix.android_api }}
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: 11
+
+      - name: Install Maestro
+        run: MAESTRO_VERSION=1.30.4 curl -Ls 'https://get.maestro.mobile.dev' | bash
+
+      - name: Install genymotion
+        run: |
+          pip3 install gmsaas
+          gmsaas config set android-sdk-path "$ANDROID_HOME"
+
+      - name: Auth genymotion
+        run: gmsaas auth login ${{ secrets.GMSAAS_EMAIL }} ${{ secrets.GMSAAS_PASSWORD }}
+
+      - name: Start an Instance
+        id: start_instance
+        run: |
+          gmsaas recipes list # List available recipes
+
+          INSTANCE_UUID=$(gmsaas instances start "$GM_ANDROID_${{ matrix.android_api }}" "${{ env.GMSAAS_INSTANCE_NAME }}")
+
+          echo "instance_uuid=$INSTANCE_UUID" >> "$GITHUB_OUTPUT"
+
+      - name: Connect an Instance to ADB
+        run: |
+          gmsaas instances adbconnect "${{ steps.start_instance.outputs.instance_uuid }}"
+          $ANDROID_HOME/platform-tools/adb devices
+
+      - name: Run Android E2E
+        run: |
+          $ANDROID_HOME/platform-tools/adb install app-release.apk
+          ./run_android_e2e.sh
+
+      - name: Stop an Instance
+        if: always()
+        continue-on-error: true
+        run: |
+          gmsaas instances stop --no-wait "${{ steps.start_instance.outputs.instance_uuid }}"
+          gmsaas instances list
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: e2e-report-${{ matrix.android_api }}
+          path: |
+            ${{ github.workspace }}/*.mp4
+            ${{ github.workspace }}/*.png
+            ${{ github.workspace }}/report*.xml
+
+      - name: Upload debug logs
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: e2e-debug-logs-${{ matrix.android_api }}
+          path: ~/.maestro/tests/**/*

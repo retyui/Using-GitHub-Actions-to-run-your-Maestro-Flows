@@ -117,17 +117,24 @@ jobs:
 
             adb install app-release.apk # install app
 
-            # Run e2e (3 attempts with different timeouts)
-            (echo "-Attempt:1-" && $HOME/.maestro/bin/maestro test .maestro/ --env=APP_ID=com.retyui.myapp --output=report1.xml --format=junit) || (echo "-Attempt:2-" && sleep 20 && $HOME/.maestro/bin/maestro test .maestro/ --env=APP_ID=com.retyui.myapp --output=report2.xml --format=junit) || (echo "-Attempt:3-" && sleep 60 && $HOME/.maestro/bin/maestro test .maestro/ --env=APP_ID=com.retyui.myapp --output=report3.xml --format=junit) || (echo "-Failed-" && exit 1)
+            # Run e2e
+            ./run_android_e2e.sh
+            # ^^^ Will debug files: report*.xml, video_record.mp4, last_img.png
 
-            # ^^^ I can't multiline operator `\` in `script` section as each line will be executed in a separate shell 
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: e2e-report-${{ matrix.recipe_uuid }}
+          path: |
+            ${{ github.workspace }}/*.mp4
+            ${{ github.workspace }}/*.png
+            ${{ github.workspace }}/report*.xml
 
+      - name: Upload debug logs
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: e2e-debug-logs-${{ matrix.recipe_uuid }}
+          path: ~/.maestro/tests/**/*
 
-#      - name: Upload artifacts
-#        if: always() # when prev. step failed, this step won't be skipped
-#        uses: actions/upload-artifact@v3
-#        with:
-#          name: e2e-report
-#          path: |
-#            *.mp4
-#            report*.xml
