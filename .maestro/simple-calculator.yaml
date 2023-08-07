@@ -1,0 +1,27 @@
+appId: ${APP_ID}
+name: Verify increment and decrement buttons work
+onFlowStart:
+  - startRecording: simple-calculator
+onFlowComplete:
+  - stopRecording
+---
+- launchApp
+- runFlow: _subflow/wait_app_to_run.yaml
+
+- assertVisible: "Count: 0"
+
+- tapOn:
+    id: "increment_btn"
+- assertVisible: "Count: 1"
+
+- tapOn:
+    id: "increment_btn"
+- assertVisible: "Count: 2"
+
+- tapOn:
+    id: "decrement_btn"
+- tapOn:
+    id: "decrement_btn"
+- tapOn:
+    id: "decrement_btn"
+- assertVisible: "Count: -1"

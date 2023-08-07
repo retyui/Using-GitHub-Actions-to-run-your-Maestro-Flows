@@ -1,0 +1,46 @@
+appId: ${APP_ID}
+---
+################################################
+# Fix for Android emulator on CI
+################################################
+- evalScript: ${output.myStatus = 'unknown'}
+- evalScript: ${output.attemptsCount = 0}
+- repeat:
+    while:
+      true: ${output.myStatus === 'unknown'}
+    # run until the status changes
+    commands:
+      - runFlow:
+          when:
+            visible: "Close app"
+          commands:
+            - evalScript: ${output.myStatus = 'error'}
+      # ^^^ first `runFlow` wait for an error case
+      - runFlow:
+          when:
+            true: ${output.myStatus === 'unknown'}
+          commands:
+            - runFlow:
+                when:
+                  visible:
+                    id: "result_text"
+                commands:
+                  - evalScript: ${output.myStatus = 'success'}
+      # ^^^ second nested `runFlow` will wait for a success case
+
+      # The remaining logic deals with a timeout case
+      - runFlow:
+          when:
+            true: ${output.attemptsCount > 15} # Check attempt limit
+          commands:
+            - evalScript: ${output.myStatus = 'timeout'}
+      - evalScript: ${output.attemptsCount = output.attemptsCount + 1} # Incerunmen an attempt counter
+
+# ^^^ After that you can run any logic based on `output.myStatus`
+# for example throw an error if status isn't `success`
+
+- runFlow:
+    when:
+      true: ${output.myStatus === 'error'}
+    commands:
+      - tapOn: "Close app"
