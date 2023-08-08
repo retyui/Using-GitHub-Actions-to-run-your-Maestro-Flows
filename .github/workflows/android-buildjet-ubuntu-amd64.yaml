@@ -9,7 +9,7 @@ jobs:
 
     strategy:
       fail-fast: false
-      max-parallel: 10
+      max-parallel: 5
       matrix:
         arch: [x86, x86_64]
         # ^^^ `runs-on: buildjet-2vcpu-ubuntu-2204` doesn't support `arm64-v8a`
@@ -120,7 +120,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v3
         with:
-          name: e2e-report-${{ matrix.recipe_uuid }}
+          name: e2e-report-${{ matrix.api-level }}-${{ matrix.arch }}-${{ matrix.target }}
           path: |
             ${{ github.workspace }}/*.mp4
             ${{ github.workspace }}/*.png
@@ -130,5 +130,5 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v3
         with:
-          name: e2e-debug-logs-${{ matrix.recipe_uuid }}
+          name: e2e-debug-logs-${{ matrix.api-level }}-${{ matrix.arch }}-${{ matrix.target }}
           path: ~/.maestro/tests/**/*

@@ -127,7 +127,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v3
         with:
-          name: e2e-report-${{ matrix.recipe_uuid }}
+          name: e2e-report-${{ matrix.api-level }}-${{ matrix.arch }}-${{ matrix.target }}
           path: |
             ${{ github.workspace }}/*.mp4
             ${{ github.workspace }}/*.png
@@ -137,7 +137,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v3
         with:
-          name: e2e-debug-logs-${{ matrix.recipe_uuid }}
+          name: e2e-debug-logs-${{ matrix.api-level }}-${{ matrix.arch }}-${{ matrix.target }}
           path: ~/.maestro/tests/**/*
 
 
@@ -186,7 +186,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v3
         with:
-          name: e2e-report-${{ matrix.recipe_uuid }}
+          name: e2e-report-ios
           path: |
             ${{ github.workspace }}/*.mp4
             ${{ github.workspace }}/*.png
@@ -196,5 +196,5 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v3
         with:
-          name: e2e-debug-logs-${{ matrix.recipe_uuid }}
+          name: e2e-debug-logs-ios
           path: ~/.maestro/tests/**/*
