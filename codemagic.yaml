@@ -1,0 +1,74 @@
+workflows:
+  run_ios_e2e_workflow:
+    name: iOS E2E
+    max_build_duration: 60
+    instance_type: mac_mini_m1 # Standard VM on Mac mini M1 3.2GHz Quad Core / 8GB
+    environment:
+      java: 11.0.18
+    scripts:
+      - name: Run iPhone simulator
+        script: |
+          set -e # exit on first failed command
+
+          echo "All valid available device types"
+          xcrun simctl list devicetypes
+
+          echo "All valid and available runtimes"
+          xcrun simctl list runtimes
+
+          echo "Run simulator"
+          xcrun simctl boot "iPhone 14"
+
+      - name: Install Maestro
+        script: |
+          brew tap facebook/fb
+          brew install facebook/fb/idb-companion
+          MAESTRO_VERSION=1.30.4 curl -Ls 'https://get.maestro.mobile.dev' | bash
+
+      - name: Print environment info
+        script: npx envinfo
+
+      - name: Install .app
+        script: xcrun simctl install booted ./MyApp.app
+
+      - name: Run Maestro E2E tests
+        script: ./run_ios_e2e.sh
+
+    artifacts:
+      - "*.mp4"
+      - "*.png"
+      - "report*.xml"
+      - "~/.maestro/tests/**/*"
+
+  run_android_e2e_workflow:
+    name: Android E2E
+    max_build_duration: 60
+    instance_type: linux # Standard VM on Linux 4 vCPUs, 16 GB memory
+    environment:
+      java: 11.0.13 # https://docs.codemagic.io/partials/specs/versions-macos-intel-xcode-13-0/#java-versions
+    scripts:
+      - name: Run Android 11.0 (R) emulator in background
+        # from: https://docs.codemagic.io/specs/versions-linux/#android-emulators
+        script: $ANDROID_HOME/tools/emulator -avd emulator &
+
+      - name: Install Maestro
+        script: MAESTRO_VERSION=1.30.4 curl -Ls 'https://get.maestro.mobile.dev' | bash
+
+      - name: Print environment info
+        script: npx envinfo
+
+      - name: Wait emulator
+        script: adb wait-for-device shell 'while [[ -z $(getprop sys.boot_completed) ]]; do sleep 3; done; input keyevent 82'
+
+
+      - name: Run Maestro E2E tests
+        script: |
+          adb devices
+          adb install app-release.apk
+          ./run_android_e2e.sh
+
+    artifacts:
+      - "*.mp4"
+      - "*.png"
+      - "report*.xml"
+      - "~/.maestro/tests/**/*"
