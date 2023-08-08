@@ -3,8 +3,8 @@ name: Android E2E (Genymotion Cloud)
 on: [push, pull_request]
 
 env:
-  GM_ANDROID_13 : 45017bce-d954-4b94-83d9-f9eac862f117
-  GM_ANDROID_12 : 49783077-9f15-4b94-99a4-c124a464fba3
+  GM_ANDROID_13 : 45017bce-d954-4b94-83d9-f9eac862f117 # my custom recipe
+  GM_ANDROID_12 : 49783077-9f15-4b94-99a4-c124a464fba3 # my custom recipe
   GM_ANDROID_11 : 95016679-8f8d-4890-b026-e4ad889aadf1
   GM_ANDROID_10 : 4c015ada-e64e-4f5d-a320-06cbf6e95648
   GM_ANDROID_9  : 107d757e-463a-4a18-8667-b8dec6e4c87e
@@ -77,19 +77,14 @@ jobs:
           gmsaas instances stop --no-wait "${{ steps.start_instance.outputs.instance_uuid }}"
           gmsaas instances list
 
+
       - name: Upload report
         if: always()
         uses: actions/upload-artifact@v3
         with:
-          name: e2e-report-${{ matrix.android_api }}
+          name: E2E Report (${{ matrix.android_api }})
           path: |
             ${{ github.workspace }}/*.mp4
             ${{ github.workspace }}/*.png
             ${{ github.workspace }}/report*.xml
-
-      - name: Upload debug logs
-        if: always()
-        uses: actions/upload-artifact@v3
-        with:
-          name: e2e-debug-logs-${{ matrix.android_api }}
-          path: ~/.maestro/tests/**/*
+            ~/.maestro/tests/**/*
