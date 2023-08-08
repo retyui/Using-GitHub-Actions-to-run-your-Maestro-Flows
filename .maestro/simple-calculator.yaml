@@ -1,9 +1,9 @@
 appId: ${APP_ID}
 name: Verify increment and decrement buttons work
-onFlowStart:
-  - startRecording: simple-calculator
-onFlowComplete:
-  - stopRecording
+#onFlowStart:
+#  - startRecording: simple-calculator
+#onFlowComplete:
+#  - stopRecording
 ---
 - launchApp
 - runFlow: _subflow/wait_app_to_run.yaml

@@ -127,18 +127,12 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v3
         with:
-          name: e2e-report-${{ matrix.api-level }}-${{ matrix.arch }}-${{ matrix.target }}
+          name: E2E Report (${{ matrix.arch }}, ${{ matrix.api-level }}, ${{ matrix.target }})
           path: |
             ${{ github.workspace }}/*.mp4
             ${{ github.workspace }}/*.png
             ${{ github.workspace }}/report*.xml
-
-      - name: Upload debug logs
-        if: always()
-        uses: actions/upload-artifact@v3
-        with:
-          name: e2e-debug-logs-${{ matrix.api-level }}-${{ matrix.arch }}-${{ matrix.target }}
-          path: ~/.maestro/tests/**/*
+            ~/.maestro/tests/**/*
 
 
 
@@ -186,15 +180,9 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v3
         with:
-          name: e2e-report-ios
+          name: E2E Report (iPhone 14)
           path: |
             ${{ github.workspace }}/*.mp4
             ${{ github.workspace }}/*.png
             ${{ github.workspace }}/report*.xml
-
-      - name: Upload debug logs
-        if: always()
-        uses: actions/upload-artifact@v3
-        with:
-          name: e2e-debug-logs-ios
-          path: ~/.maestro/tests/**/*
+            ~/.maestro/tests/**/*

@@ -10,7 +10,7 @@ jobs:
 
     strategy:
       fail-fast: false
-      max-parallel: 8
+      max-parallel: 10
       matrix:
         arch: [x86, x86_64]
         # ^^^ `runs-on: ubuntu-*` doesn't support `arm64-v8a`
@@ -79,18 +79,21 @@ jobs:
           cores: 2
           ram-size: 2048M
           force-avd-creation: false
-          emulator-boot-timeout: 600 # 10min
+          emulator-boot-timeout: 900 # 15min
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
           pre-emulator-launch-script: |
             echo "Running pre emulator launch script. Printing the working directory now:"
             pwd
           script: |
-            npx envinfo                 # check memory usage
+            # check memory usage
+            npx envinfo
+            
+            # verify emulator is running
+            adb devices
 
-            adb devices                 # verify emulator is running
-
-            adb install app-release.apk # install app
+            # Install app
+            adb install app-release.apk || (adb kill-server && adb start-server && adb devices && adb install app-release.apk)
 
             # Run e2e
             ./run_android_e2e.sh
@@ -102,15 +105,9 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v3
         with:
-          name: e2e-report-${{ matrix.api-level }}-${{ matrix.arch }}-${{ matrix.target }}
+          name: E2E Report (${{ matrix.arch }}, ${{ matrix.api-level }}, ${{ matrix.target }})
           path: |
             ${{ github.workspace }}/*.mp4
             ${{ github.workspace }}/*.png
             ${{ github.workspace }}/report*.xml
-
-      - name: Upload debug logs
-        if: always()
-        uses: actions/upload-artifact@v3
-        with:
-          name: e2e-debug-logs-${{ matrix.api-level }}-${{ matrix.arch }}-${{ matrix.target }}
-          path: ~/.maestro/tests/**/*
+            ~/.maestro/tests/**/*
