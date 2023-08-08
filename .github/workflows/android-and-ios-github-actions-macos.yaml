@@ -1,7 +1,9 @@
-name: Android E2E (Github Actions MacOS)
+name: Android & iOS E2E (Github Actions MacOS)
 
 on: [push, pull_request]
 
+env:
+  MAESTRO_VERSION: 1.30.4
 
 jobs:
   run_android_e2e:
@@ -93,7 +95,7 @@ jobs:
           java-version: 11
 
       - name: Install Maestro
-        run: MAESTRO_VERSION=1.30.4 curl -Ls 'https://get.maestro.mobile.dev' | bash
+        run: curl -Ls 'https://get.maestro.mobile.dev' | bash
 
       - name: Run Maestro E2E tests
         uses: reactivecircus/android-emulator-runner@v2
@@ -138,3 +140,61 @@ jobs:
           name: e2e-debug-logs-${{ matrix.recipe_uuid }}
           path: ~/.maestro/tests/**/*
 
+
+
+  run_ios_e2e:
+    runs-on: macos-12
+    env:
+      XC_SIMULATOR_NAME: iPhone 14
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+
+      - name: Run iOS Simulator
+        run: |
+          echo "All valid available device types"
+          xcrun simctl list devicetypes
+
+          echo "All valid and available runtimes"
+          xcrun simctl list runtimes
+
+          echo "Run simulator"
+          xcrun simctl boot "${{ env.XC_SIMULATOR_NAME }}"
+
+      - run: npx envinfo
+
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: 11
+
+      - name: Install Maestro
+        run: |
+          brew tap facebook/fb
+          brew install facebook/fb/idb-companion
+          curl -Ls 'https://get.maestro.mobile.dev' | bash
+
+      - name: Install .app
+        run: xcrun simctl install booted ./MyApp.app
+
+      - name: Run Maestro E2E tests
+        run: ./run_ios_e2e.sh
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: e2e-report-${{ matrix.recipe_uuid }}
+          path: |
+            ${{ github.workspace }}/*.mp4
+            ${{ github.workspace }}/*.png
+            ${{ github.workspace }}/report*.xml
+
+      - name: Upload debug logs
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: e2e-debug-logs-${{ matrix.recipe_uuid }}
+          path: ~/.maestro/tests/**/*
