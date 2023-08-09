@@ -10,7 +10,7 @@ jobs:
 
     strategy:
       fail-fast: false
-      max-parallel: 10
+      max-parallel: 5
       matrix: # only these combinations work stable on `ubuntu-*`:
         api-level: [26, 27, 28]
         arch: [x86, x86_64]
