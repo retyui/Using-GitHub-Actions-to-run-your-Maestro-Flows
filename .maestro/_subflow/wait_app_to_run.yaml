@@ -1,4 +1,4 @@
-appId: ${APP_ID}
+appId: com.retyui.myapp
 ---
 ################################################
 # Fix for Android emulator on CI

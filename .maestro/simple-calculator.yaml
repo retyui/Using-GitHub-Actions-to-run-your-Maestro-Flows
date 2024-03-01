@@ -1,4 +1,4 @@
-appId: ${APP_ID}
+appId: com.retyui.myapp
 name: Verify increment and decrement buttons work
 #onFlowStart:
 #  - startRecording: simple-calculator
